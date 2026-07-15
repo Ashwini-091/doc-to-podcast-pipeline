@@ -41,13 +41,15 @@ with st.sidebar:
 
     selected_model = st.text_input(
         "Enter Groq Model ID",
-        value="",
-        placeholder="e.g., mixtral-8x7b-32768, llama-3.2-90b-vision-preview",
-        help="Copy a model ID from https://console.groq.com/docs/models and paste it here"
+        value="llama-3.1-8b-instant",
+        placeholder="e.g., llama-3.1-8b-instant, qwen/qwen3-32b",
+        help="Optimized for low token usage. Alternatives: qwen/qwen3-32b, qwen/qwen3.6-27b"
     )
 
     if not selected_model:
         st.error("⚠️ Model ID is required! Please enter a valid Groq model ID.")
+    else:
+        st.info(f"✅ Using model: `{selected_model}`")
 
     # TTS selection
     tts_choice = st.radio(

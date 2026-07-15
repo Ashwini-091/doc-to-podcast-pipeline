@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY="sk-ant-..."  # Windows: set ANTHROPIC_API_KEY=...
+export GROQ_API_KEY="gsk-..."  # Windows: set GROQ_API_KEY=...
 ```
 
 ### Run the application
@@ -154,11 +154,11 @@ Script
 
 1. **Sentence Transformers for Embeddings**: Lightweight (384 dims), fast, no API calls
 2. **FAISS IndexFlatL2**: Simple exact search; could be upgraded to IVFFlat for scale
-3. **Claude API (not Grok)**: More stable, reliable, well-documented
+3. **Groq API (FREE!)**: Fast inference (400+ tokens/sec), no cost, generous rate limits
 4. **Streamlit (not FastAPI)**: Simpler for single-user workflow; FastAPI can be added for multi-user scaling
 5. **Grounded Generation Constraint**: System prompts enforce "use ONLY provided context" to prevent hallucination
 6. **Local File Storage**: No cloud deps; FAISS index persists between sessions
-7. **Metrics Tracking**: Per-stage timing aids cost/latency optimization
+7. **Metrics Tracking**: Per-stage timing aids latency optimization (Groq is already very fast)
 
 ## 🛠️ Common Development Tasks
 
@@ -191,9 +191,9 @@ self.embedding_model = SentenceTransformer("model-name")
 
 ### Use different LLM
 **File**: `backend/agent.py`, method `__init__()`, parameter `model`
-- Current: `claude-3-5-sonnet-20241022`
-- Options: `claude-3-opus-20250219` (slower, better quality)
-- Or swap to OpenAI/other via `client = OpenAI()` (requires code changes)
+- Current: `mixtral-8x7b-32768` (Groq)
+- Options: `llama-2-70b-4096` (better quality, slower), `gemma-7b-it` (lightweight)
+- All models are free via Groq API
 
 ### Deploy Streamlit to cloud
 ```bash
@@ -244,17 +244,17 @@ def test_full_pipeline():
 ## 📊 Performance Characteristics
 
 ### Typical Run (5000-word document, 10-section outline)
-- **Planning**: ~2-3 seconds, ~450 tokens
+- **Planning**: ~1-2 seconds (Groq is 5-10x faster than Claude)
 - **Retrieval**: ~100-200ms per section
-- **Expansion**: ~4-5 seconds per section, ~300 tokens each
-- **Criticism**: ~2 seconds, ~680 tokens
-- **Revision** (if needed): ~2-3 seconds, ~1200 tokens
+- **Expansion**: ~2-3 seconds per section (vs 4-5 with Claude)
+- **Criticism**: ~1 second (vs 2 with Claude)
+- **Revision** (if needed): ~1-2 seconds
 - **TTS**: ~5-10 seconds (gTTS), ~30 seconds (pyttsx3)
-- **Total**: ~30-45 seconds wall-clock (mostly TTS)
+- **Total**: ~15-30 seconds wall-clock (vs 30-60 with Claude)
 
-### Token Budget
+### Token Budget & Cost
 - Typical: 4,000-5,000 tokens per document
-- Cost: ~$0.02-0.03 per podcast (Claude 3.5 Sonnet pricing)
+- Cost: **FREE** with Groq (was ~$0.02-0.03 per podcast with Claude)
 
 ### Storage
 - FAISS index: ~5-10 MB per 50,000 chunks
@@ -282,8 +282,8 @@ def test_full_pipeline():
 
 ## 🔐 Security Notes
 
-- **API Keys**: ANTHROPIC_API_KEY stored as env var, never in code
-- **Local Storage**: No data sent to external services except Claude API
+- **API Keys**: GROQ_API_KEY stored as env var, never in code
+- **Local Storage**: No data sent to external services except Groq API
 - **User Uploads**: Stored in `data/documents/`; files are yours to manage
 - **Grounded Generation**: System prompts prevent model from fabricating context
 

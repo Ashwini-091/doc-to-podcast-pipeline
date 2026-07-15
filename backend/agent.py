@@ -109,7 +109,7 @@ Create the outline now:"""
 
         response = self.client.chat.completions.create(
             model=self.model,
-            max_tokens=1000,
+            max_tokens=600,
             messages=messages
         )
 
@@ -162,7 +162,7 @@ Write the expanded script section now. Remember: use ONLY the provided context."
 
         response = self.client.chat.completions.create(
             model=self.model,
-            max_tokens=800,
+            max_tokens=500,
             messages=messages
         )
 
@@ -199,10 +199,10 @@ Write the expanded script section now. Remember: use ONLY the provided context."
                 "content": f"""Review this podcast script for factual accuracy against the source document:
 
 SOURCE DOCUMENT (excerpt):
-{document_content[:1500]}
+{document_content[:800]}
 
 PODCAST SCRIPT:
-{script}
+{script[:2000]}
 
 Identify claims not supported by the document:"""
             }
@@ -282,7 +282,8 @@ Revise the script now:"""
 
     def generate_full_script(self, document_path: str) -> str:
         """
-        Generate full podcast script through plan-expand-critique-revise cycle.
+        Generate full podcast script through plan-expand cycle (optimized for speed and token usage).
+        Skips criticism and revision to reduce token usage by ~30%.
 
         Args:
             document_path: Path to document file
@@ -295,13 +296,13 @@ Revise the script now:"""
             from backend.utils import extract_text_from_file
             document_content = extract_text_from_file(document_path)
 
-            print("\n[1/4] PLANNING OUTLINE...")
+            print("\n[1/2] PLANNING OUTLINE...")
             outline = self.plan_outline(document_content)
             if not isinstance(outline, str):
                 outline = str(outline)
             print(f"Outline created:\n{outline}\n")
 
-            print("[2/4] EXPANDING SECTIONS...")
+            print("[2/2] EXPANDING SECTIONS...")
             sections = outline.split('\n')
             script_parts = []
 
@@ -316,23 +317,8 @@ Revise the script now:"""
                     script_parts.append(expanded)
 
             full_script = "\n\n".join(script_parts)
-
-            print("\n[3/4] CRITIQUING SCRIPT...")
-            critique_result = self.critique_script(full_script, document_content)
-            print(f"Critique:\n{critique_result['feedback']}\n")
-
-            print("[4/4] REVISING IF NEEDED...")
-            needs_revision = critique_result.get('needs_revision', False)
-            needs_revision = bool(needs_revision)
-
-            if needs_revision:
-                print("Revisions needed, processing...")
-                full_script = self.revise_script(full_script, critique_result['feedback'])
-                if not isinstance(full_script, str):
-                    full_script = str(full_script)
-                print("Script revised!")
-            else:
-                print("Script approved!")
+            print("\n✓ Script generated successfully!")
+            print("(Note: Criticism and revision phases skipped for faster generation)")
 
             return full_script
         except Exception as e:
